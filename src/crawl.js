@@ -27,7 +27,7 @@ module.exports.WebSpider = class WebSpider {
 
         const page = await this.browser.newPage();
 
-        await page.goto(site, { waitUntil: "networkidle0" });
+        await page.goto(site, { waitUntil: "networkidle0" }).catch(console.error);
 
         const html = await page.content();
 
@@ -68,8 +68,11 @@ module.exports.WebSpider = class WebSpider {
             })
             .filter((href) => !!href);
 
+        const urls = [...new Set(URLs)];
+        console.log(urls);
+
         // @ts-ignore
-        return [...new Set(URLs)];
+        return urls;
     }
 };
 

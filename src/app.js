@@ -1,12 +1,7 @@
-require("dotenv").config();
-
 const { GPT } = require("./gpt");
 const { PineConeInstance } = require("./pinecone");
 const config = require("./config");
 const { WebSpider } = require("./crawl");
-
-const URL = "https://www.upwork.com/";
-const NAMESPACE = "SomeRandomUderId";
 
 const openai = new GPT({
     apiKey: config.OPENAI_APIKEY,
@@ -24,7 +19,7 @@ const spider = new WebSpider();
 //
 //
 
-async function run(URL) {
+module.exports.run = async function run(URL, NAMESPACE) {
     await spider.launch();
     await pinecone.init();
 
@@ -53,7 +48,7 @@ async function run(URL) {
 
     // const models = await openai.listModels();
     // console.log(models);
-}
+};
 
 //
 
@@ -88,8 +83,3 @@ async function processPage(url) {
 
     return embededData.data;
 }
-
-//
-
-// RUN
-run(URL).catch(console.error);
