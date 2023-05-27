@@ -5,7 +5,8 @@ const { PineConeInstance } = require("./pinecone");
 const config = require("./config");
 const { WebSpider } = require("./crawl");
 
-process.env.OPENAI_APIKEY;
+const URL = "https://punky.ai/";
+const NAMESPACE = "SomeRandomUderId";
 
 const openai = new GPT({
     apiKey: config.OPENAI_APIKEY,
@@ -19,26 +20,78 @@ const pinecone = new PineConeInstance({
 
 const spider = new WebSpider();
 
-(async () => {
-    //
+//
+//
+//
 
+async function run() {
     await spider.launch();
+    await pinecone.init();
 
-    const html = await spider.crawl("https://punky.ai/");
+    /** @type {{embededData: import("./gpt").EmbeddingData[], url: string}[]} */
+    const chunks = [];
 
-    // console.log(spider.detectPaths(html));
+    const html = await spider.crawl(URL);
+
+    const mainPageData = spider.makeTextFromDOM(html);
+    const mainPageEmbededData = await openai.createEmbedding(mainPageData).catch((e) => null);
+    if (!mainPageEmbededData?.data) throw new Error("GPT: Request not satisfied");
+
+    chunks.push({ embededData: mainPageEmbededData.data, url: URL });
+
+    const urls = spider.detectPaths(html, URL);
+
+    for (const url of urls) {
+        const embededData = await processPage(url).catch((e) => e);
+
+        chunks.push({ embededData, url });
+    }
+
+    const vectorBasedData = chunks.map(({ embededData, url }) => parseData(embededData, url));
+
+    await uploadData(vectorBasedData, NAMESPACE);
+
+    // const models = await openai.listModels();
+    // console.log(models);
+
+    // await uploadData(parseData(exampleData[0], URL), NAMESPACE);
+}
+
+//
+
+/**
+ * @param {import("./pinecone").Vector[]} data
+ * @param {string} namespace
+ */
+async function uploadData(data, namespace) {
+    const res = await pinecone.upsert(data, namespace).catch((e) => e);
+    console.log(res);
+}
+
+//
+
+/**
+ * @param {import("./gpt").EmbeddingData[]} data
+ * @param {string} url
+ */
+const parseData = (data, url) => ({ values: data[0].embedding, id: url });
+
+//
+
+/** @param {string} url */
+async function processPage(url) {
+    const html = await spider.crawl(url);
 
     const data = spider.makeTextFromDOM(html);
 
-    console.log(data);
+    // /** @type {import("./gpt").EmbeddingResponse|null} */
+    const embededData = await openai.createEmbedding(data).catch((e) => null);
+    if (!embededData?.data) throw new Error("GPT: Request not satisfied");
 
-    // const models = await openai.listModels();
+    return embededData.data;
+}
 
-    // console.log(models);
+//
 
-    // const embededData = await openai.createEmbedding(data);
-
-    // console.log(embededData)
-
-    //
-})();
+// RUN
+run().catch(console.error);

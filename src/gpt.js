@@ -4,15 +4,11 @@ module.exports.GPT = class GPT {
     //
 
     /**
-     *
      * @param {{
      *  apiKey: string;
      *  organization?: string;
      * }} options
      */
-
-    //
-
     constructor(options) {
         this.configuration = new openai.Configuration({
             apiKey: options.apiKey,
@@ -30,9 +26,6 @@ module.exports.GPT = class GPT {
      * @param {string} input
      * @returns {Promise<EmbeddingResponse>}
      */
-
-    //
-
     async createEmbedding(input) {
         const data = await this.engine
             .createEmbedding({
@@ -59,7 +52,7 @@ module.exports.GPT = class GPT {
 
 /**
  * @typedef EmbeddingResponse
- * @property {EmbeddingData} data
+ * @property {EmbeddingData[]} data
  * @property {string} model
  * @property {{
  *  prompt_tokens: number;

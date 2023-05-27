@@ -3,12 +3,6 @@ const cheerio = require("cheerio");
 const pptr = require("puppeteer");
 
 module.exports.WebSpider = class WebSpider {
-    //
-
-    /**
-     * @property {undefined|pptr.Browser} browser
-     */
-
     constructor() {
         this.browser = null;
     }
@@ -25,11 +19,9 @@ module.exports.WebSpider = class WebSpider {
     //
 
     /**
-     *
      * @param {string} site
      * @returns {Promise<cheerio.CheerioAPI>}
      */
-
     async crawl(site) {
         if (!this.browser) return this.launch().then(() => this.crawl(site));
 
@@ -49,10 +41,8 @@ module.exports.WebSpider = class WebSpider {
     //
 
     /**
-     *
      * @param {cheerio.CheerioAPI} dom
      */
-
     makeTextFromDOM(dom) {
         dom("style").text("");
         dom("script").text("");
@@ -63,19 +53,17 @@ module.exports.WebSpider = class WebSpider {
     //
 
     /**
-     *
      * @param {cheerio.CheerioAPI} dom
      * @param {string} base
      * @returns {string[]}
      */
-
     detectPaths(dom, base) {
         const exclusions = ["", "#", "javascript:void(0)"];
         const URLs = Array.from(dom("a"))
             .map((el) => {
                 const href = el.attribs.href;
                 if (exclusions.includes(href.toLowerCase())) return undefined;
-                const url = parseURL(base, href);
+                const url = parseURL(new URL(base).origin + "/", href);
                 return url;
             })
             .filter((href) => !!href);
@@ -83,12 +71,11 @@ module.exports.WebSpider = class WebSpider {
         // @ts-ignore
         return [...new Set(URLs)];
     }
-
-    //
 };
 
+//
+
 /**
- *
  * @param {string} base
  * @param {string} URLlike
  */
@@ -106,5 +93,7 @@ function parseURL(base, URLlike) {
 
     if (!url || url?.hostname !== new URL(base).hostname) return null;
 
-    return url.href;
+    url.hash = "";
+
+    return url.toString();
 }
