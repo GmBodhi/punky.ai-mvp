@@ -16,39 +16,16 @@ const pinecone = new PineConeInstance({
 const spider = new WebSpider();
 
 //
-//
-//
 
-module.exports.run = async function run(URL, NAMESPACE) {
+async function init() {
     await spider.launch();
     await pinecone.init();
+}
 
-    /** @type {{embededData: import("./gpt").EmbeddingData[], url: string}[]} */
-    const chunks = [];
-
+async function getURLs(URL) {
     const html = await spider.crawl(URL);
-
-    const mainPageData = spider.makeTextFromDOM(html);
-    const mainPageEmbededData = await openai.createEmbedding(mainPageData).catch((e) => null);
-    if (!mainPageEmbededData?.data) throw new Error("GPT: Request not satisfied");
-
-    chunks.push({ embededData: mainPageEmbededData.data, url: URL });
-
-    const urls = spider.detectPaths(html, URL);
-
-    for (const url of urls) {
-        const embededData = await processPage(url).catch((e) => e);
-
-        chunks.push({ embededData, url });
-    }
-
-    const vectorBasedData = chunks.map(({ embededData, url }) => parseData(embededData, url));
-
-    await uploadData(vectorBasedData, NAMESPACE);
-
-    // const models = await openai.listModels();
-    // console.log(models);
-};
+    return spider.detectPaths(html, URL);
+}
 
 //
 
@@ -57,8 +34,7 @@ module.exports.run = async function run(URL, NAMESPACE) {
  * @param {string} namespace
  */
 async function uploadData(data, namespace) {
-    const res = await pinecone.upsert(data, namespace).catch((e) => e);
-    console.log(res);
+    return await pinecone.upsert(data, namespace).catch((e) => e);
 }
 
 //
@@ -83,3 +59,12 @@ async function processPage(url) {
 
     return embededData.data;
 }
+
+module.exports = {
+    processPage,
+    parseData,
+    getURLs,
+    init,
+    uploadData,
+    pinecone
+};

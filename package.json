@@ -4,6 +4,9 @@
     "@pinecone-database/pinecone": "^0.1.6",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.0.3",
+    "fuse.js": "^6.6.2",
+    "inquirer": "8",
+    "inquirer-checkbox-plus-prompt": "^1.4.2",
     "openai": "^3.2.1",
     "puppeteer": "^20.4.0"
   },

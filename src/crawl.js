@@ -68,8 +68,7 @@ module.exports.WebSpider = class WebSpider {
             })
             .filter((href) => !!href);
 
-        const urls = [...new Set(URLs)];
-        console.log(urls);
+        const urls = [...new Set([...URLs, base])];
 
         // @ts-ignore
         return urls;

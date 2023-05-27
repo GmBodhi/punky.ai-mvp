@@ -1,95 +1,56 @@
 require("dotenv").config();
 
-const { GPT } = require("./gpt");
-const { PineConeInstance } = require("./pinecone");
-const config = require("./config");
-const { WebSpider } = require("./crawl");
+const { getURLs, init, processPage, parseData, uploadData, pinecone } = require("./app");
+const Fuse = require("fuse.js");
+const { writeFileSync } = require("fs");
 
-const URL = "https://www.upwork.com/";
 const NAMESPACE = "SomeRandomUderId";
 
-const openai = new GPT({
-    apiKey: config.OPENAI_APIKEY,
-});
-
-const pinecone = new PineConeInstance({
-    indexName: config.indexName,
-    apiKey: config.PINECONE_APIKEY,
-    environment: config.PINECONE_ENVIRONMENT,
-});
-
-const spider = new WebSpider();
-
-//
-//
 //
 
-async function run(URL) {
-    await spider.launch();
-    await pinecone.init();
+void (async function run() {
+    await init();
 
-    /** @type {{embededData: import("./gpt").EmbeddingData[], url: string}[]} */
+    const inquirer = (await import("inquirer")).default;
+
+    inquirer.registerPrompt("checkbox-plus", require("inquirer-checkbox-plus-prompt"));
+
+    const { prompt } = inquirer;
+
+    const { mainUrl } = await prompt([{ type: "input", name: "mainUrl", message: "Enter the URL you want to crawl:" }]);
+
+    const urls = await getURLs(mainUrl);
+
+    // @ts-ignore
+    const fuse = new Fuse(urls, {});
+
     const chunks = [];
 
-    const html = await spider.crawl(URL);
+    const { urls: selectedUrls } = await prompt([
+        {
+            type: "checkbox-plus",
+            name: "urls",
+            message: "Select the URLs that you want to use",
+            highlight: true,
+            searchable: true,
+            source: async (_, input = "") => {
+                if (!input.length) return urls;
 
-    const mainPageData = spider.makeTextFromDOM(html);
-    const mainPageEmbededData = await openai.createEmbedding(mainPageData).catch((e) => null);
-    if (!mainPageEmbededData?.data) throw new Error("GPT: Request not satisfied");
+                const results = fuse.search(input);
 
-    chunks.push({ embededData: mainPageEmbededData.data, url: URL });
+                return results.map((r) => r.item);
+            },
+        },
+    ]);
 
-    const urls = spider.detectPaths(html, URL);
-
-    for (const url of urls) {
-        const embededData = await processPage(url).catch((e) => e);
-
-        chunks.push({ embededData, url });
+    for (const url of selectedUrls) {
+        const embededData = await processPage(url);
+        chunks.push(parseData(embededData, url));
     }
 
-    const vectorBasedData = chunks.map(({ embededData, url }) => parseData(embededData, url));
+    await uploadData(chunks, NAMESPACE);
+    console.log("Completed");
 
-    await uploadData(vectorBasedData, NAMESPACE);
-
-    // const models = await openai.listModels();
-    // console.log(models);
-}
-
-//
-
-/**
- * @param {import("./pinecone").Vector[]} data
- * @param {string} namespace
- */
-async function uploadData(data, namespace) {
-    const res = await pinecone.upsert(data, namespace).catch((e) => e);
-    console.log(res);
-}
-
-//
-
-/**
- * @param {import("./gpt").EmbeddingData[]} data
- * @param {string} url
- */
-const parseData = (data, url) => ({ values: data[0].embedding, id: url });
-
-//
-
-/** @param {string} url */
-async function processPage(url) {
-    const html = await spider.crawl(url);
-
-    const data = spider.makeTextFromDOM(html);
-
-    // /** @type {import("./gpt").EmbeddingResponse|null} */
-    const embededData = await openai.createEmbedding(data).catch((e) => null);
-    if (!embededData?.data) throw new Error("GPT: Request not satisfied");
-
-    return embededData.data;
-}
-
-//
-
-// RUN
-run(URL).catch(console.error);
+    // DEV: SAVE TO DISK
+    writeFileSync("test.json", JSON.stringify(chunks));
+})();

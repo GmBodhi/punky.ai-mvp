@@ -1,4 +1,5 @@
 const openai = require("openai");
+const { readFileSync } = require("fs");
 
 module.exports.GPT = class GPT {
     //
