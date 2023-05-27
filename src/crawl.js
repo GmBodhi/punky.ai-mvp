@@ -65,14 +65,46 @@ module.exports.WebSpider = class WebSpider {
     /**
      *
      * @param {cheerio.CheerioAPI} dom
+     * @param {string} base
      * @returns {string[]}
      */
 
-    detectPaths(dom) {
-        const URLs = Array.from(dom("a")).map((el) => el.attribs.href);
+    detectPaths(dom, base) {
+        const exclusions = ["", "#", "javascript:void(0)"];
+        const URLs = Array.from(dom("a"))
+            .map((el) => {
+                const href = el.attribs.href;
+                if (exclusions.includes(href.toLowerCase())) return undefined;
+                const url = parseURL(base, href);
+                return url;
+            })
+            .filter((href) => !!href);
 
-        return URLs;
+        // @ts-ignore
+        return [...new Set(URLs)];
     }
 
     //
 };
+
+/**
+ *
+ * @param {string} base
+ * @param {string} URLlike
+ */
+function parseURL(base, URLlike) {
+    let url;
+    try {
+        url = new URL(URLlike);
+    } catch (error) {
+        try {
+            url = new URL(base + URLlike);
+        } catch (e) {
+            url = null;
+        }
+    }
+
+    if (!url || url?.hostname !== new URL(base).hostname) return null;
+
+    return url.href;
+}
