@@ -28,6 +28,7 @@ module.exports.GPT = class GPT {
 
     /**
      * @param {string} input
+     * @returns {Promise<EmbeddingResponse>}
      */
 
     //
@@ -53,3 +54,22 @@ module.exports.GPT = class GPT {
         return models.data.data;
     }
 };
+
+//
+
+/**
+ * @typedef EmbeddingResponse
+ * @property {EmbeddingData} data
+ * @property {string} model
+ * @property {{
+ *  prompt_tokens: number;
+ *  total_tokens: number;
+ * }} usage
+ */
+
+/**
+ * @typedef EmbeddingData
+ * @property {string} object
+ * @property {number} index
+ * @property {number[]} embedding
+ */
