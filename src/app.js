@@ -22,6 +22,10 @@ async function init() {
     await pinecone.init();
 }
 
+async function close() {
+    await spider.close();
+}
+
 async function getURLs(URL) {
     const html = await spider.crawl(URL);
     return spider.detectPaths(html, URL);
@@ -65,6 +69,7 @@ module.exports = {
     parseData,
     getURLs,
     init,
+    close,
     uploadData,
     pinecone,
 };

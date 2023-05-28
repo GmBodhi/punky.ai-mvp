@@ -18,6 +18,12 @@ module.exports.WebSpider = class WebSpider {
 
     //
 
+    async close() {
+        await this.browser?.close();
+    }
+
+    //
+
     /**
      * @param {string} site
      * @returns {Promise<cheerio.CheerioAPI>}

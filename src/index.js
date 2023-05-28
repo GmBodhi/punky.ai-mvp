@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { getURLs, init, processPage, parseData, uploadData, pinecone } = require("./app");
+const { getURLs, init, processPage, parseData, uploadData, pinecone, close } = require("./app");
 const Fuse = require("fuse.js");
 const { writeFileSync } = require("fs");
 
@@ -13,6 +13,7 @@ void (async function run() {
 
     const inquirer = (await import("inquirer")).default;
 
+    // @ts-ignore
     inquirer.registerPrompt("checkbox-plus", require("inquirer-checkbox-plus-prompt"));
 
     const { prompt } = inquirer;
@@ -53,4 +54,7 @@ void (async function run() {
 
     // DEV: SAVE TO DISK
     writeFileSync("test.json", JSON.stringify(chunks));
+
+    // Remove next line to preserve the browser client
+    await close();
 })();
