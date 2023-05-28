@@ -45,7 +45,7 @@ void (async function run() {
 
     for (const url of selectedUrls) {
         const embededData = await processPage(url);
-        chunks.push(parseData(embededData, url));
+        chunks.push(parseData(embededData, url, mainUrl));
     }
 
     await uploadData(chunks, NAMESPACE);

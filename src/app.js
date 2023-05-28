@@ -43,7 +43,7 @@ async function uploadData(data, namespace) {
  * @param {import("./gpt").EmbeddingData[]} data
  * @param {string} url
  */
-const parseData = (data, url) => ({ values: data[0].embedding, id: url });
+const parseData = (data, url, mainUrl) => ({ values: data[0].embedding, id: url, metadata: { mainUrl } });
 
 //
 
@@ -66,5 +66,5 @@ module.exports = {
     getURLs,
     init,
     uploadData,
-    pinecone
+    pinecone,
 };
