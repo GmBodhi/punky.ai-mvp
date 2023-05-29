@@ -68,7 +68,7 @@ module.exports.WebSpider = class WebSpider {
         const URLs = Array.from(dom("a"))
             .map((el) => {
                 const href = el.attribs.href;
-                if (exclusions.includes(href.toLowerCase())) return undefined;
+                if (!href || exclusions.includes(href.toLowerCase())) return undefined;
                 const url = parseURL(new URL(base).origin + "/", href);
                 return url;
             })
