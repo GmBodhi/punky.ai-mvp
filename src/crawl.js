@@ -33,7 +33,7 @@ module.exports.WebSpider = class WebSpider {
 
         const page = await this.browser.newPage();
 
-        await page.goto(site, { waitUntil: "networkidle0" }).catch(console.error);
+        await page.goto(site, { waitUntil: "networkidle0" }).catch(() => null);
 
         const html = await page.content();
 

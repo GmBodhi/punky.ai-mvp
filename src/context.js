@@ -1,4 +1,5 @@
 const Cheerio = require("cheerio");
+// @ts-ignore
 const { isWithinTokenLimit, encode, decode } = require("gpt-tokenizer/model/text-davinci-003");
 const TurndownService = require("turndown");
 
@@ -57,10 +58,7 @@ class DataContext {
     }
 
     splitDataintoParas() {
-        const data = [];
-        const temp = this.markdown.split(/#+/);
-
-        temp.forEach((d) => (!isWithinTokenLimit(d, 4000) ? data.push(...splitChunk(d)) : data.push(d)));
+        const data = [...splitChunk(this.markdown)]
 
         this.data.push(...data.map((d) => Cheerio.load(d).text()));
     }

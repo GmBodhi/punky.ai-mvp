@@ -34,7 +34,7 @@ class Prisma {
         const data = [];
         for (const doc of documents) {
             const temp = await this.prisma.document.upsert({
-                where: { id: doc.id },
+                where: { id: doc.id || "000000000000000000000000" },
                 create: { ...doc },
                 update: { ...doc },
             });

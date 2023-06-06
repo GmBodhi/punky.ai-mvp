@@ -38,12 +38,10 @@ class App {
     }
 
     async uploadData() {
-        const data = []
+        const data = [];
         const temp = [...this.data.values()];
 
-        temp.forEach(t => data.push(...t))
-
-        
+        temp.forEach((t) => data.push(...t));
 
         const upsertedData = await this.prisma.writeDocuments(
             data.map((d) => ({ content: d.data, namespace: this.namespace }))
@@ -126,8 +124,7 @@ class App {
         this.context = new GPTContext(question, docs[0].content);
         const promt = this.context.toString();
 
-        const response = await this.openai.completionWithContext(promt);
-        console.log(response);
+        return await this.openai.completionWithContext(promt);
     }
 }
 

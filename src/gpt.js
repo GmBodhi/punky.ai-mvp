@@ -52,13 +52,13 @@ class GPT {
                 model: "text-davinci-003",
                 prompt,
                 n: 1,
-                max_tokens: 4000,
+                max_tokens: 500,
             })
-            .catch(console.error);
+            .catch((e) => console.log(JSON.parse(JSON.stringify(e))));
 
         if (!data?.data?.choices?.length) return null;
 
-        return data.data.choices.at(0);
+        return data.data.choices.at(0)?.text;
     }
 
     //
