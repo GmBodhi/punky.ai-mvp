@@ -1,18 +1,6 @@
 const Cheerio = require("cheerio");
 // @ts-ignore
 const { isWithinTokenLimit, encode, decode } = require("gpt-tokenizer/model/text-davinci-003");
-const TurndownService = require("turndown");
-
-//
-
-const turndownService = new TurndownService({});
-
-turndownService
-    .addRule("brReplacement", {
-        filter: "br",
-        replacement: () => "\n",
-    })
-    .remove(["script", "style"]);
 
 class GPTContext {
     /**
@@ -55,7 +43,7 @@ class DataContext {
      * @param {string} dom
      */
     setDatafromHTML(dom) {
-        this.content = turndownService.turndown(dom);
+        this.content = dom;
         this.splitDataintoParas();
     }
 

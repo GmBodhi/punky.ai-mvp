@@ -72,7 +72,7 @@ class App {
         const html = await this.spider.crawl(url);
         const docs = [];
 
-        context.setDatafromHTML(html.html());
+        context.setDatafromHTML(this.spider.makeTextFromDOM(html));
 
         for (const data of context.data) {
             const embededData = await this.openai.createEmbedding(data).catch((e) => e);

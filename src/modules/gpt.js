@@ -1,5 +1,4 @@
 const openai = require("openai");
-const { readFileSync } = require("fs");
 
 class GPT {
     //

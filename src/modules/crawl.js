@@ -35,7 +35,7 @@ module.exports.WebSpider = class WebSpider {
 
         await page.goto(site, { waitUntil: "networkidle0" }).catch(() => null);
 
-        const html = await page.content();
+        const html = (await page.content()).replace(/<\/?\s*br\s*\/?>/gi, "\n");
 
         await page.close();
 
@@ -50,8 +50,9 @@ module.exports.WebSpider = class WebSpider {
      * @param {cheerio.CheerioAPI} dom
      */
     makeTextFromDOM(dom) {
-        dom("style").text("");
+        dom("head").text("");
         dom("script").text("");
+        dom("style").text("");
 
         return dom.text().replace(/\s+/g, " ");
     }

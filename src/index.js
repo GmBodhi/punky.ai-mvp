@@ -1,25 +1,18 @@
 require("dotenv").config();
 
-const App = require("./app");
+const App = require("./app/app");
 const Fuse = require("fuse.js");
-const { writeFileSync } = require("fs");
 const inquirer = require("inquirer");
 
 inquirer.registerPrompt("checkbox-plus", require("inquirer-checkbox-plus-prompt"));
 
-const NAMESPACE = "SomeRandomUderId";
+const app = new App();
+const { prompt } = inquirer;
 
 //
 
 void (async function run() {
-    const app = new App();
-
     await app.init();
-
-    const {
-        prompt,
-        ui: { BottomBar },
-    } = inquirer;
 
     const { mainUrl } = await prompt([{ type: "input", name: "mainUrl", message: "Enter the URL you want to crawl:" }]);
 
@@ -27,8 +20,6 @@ void (async function run() {
 
     // @ts-ignore
     const fuse = new Fuse(urls, {});
-
-    // const chunks = [];
 
     const { urls: selectedUrls } = await prompt([
         {
@@ -49,12 +40,6 @@ void (async function run() {
 
     await app.processDocuments(...selectedUrls);
 
-    // for (const url of selectedUrls) {
-    //     const embededData = await processPage(url);
-    //     chunks.push(parseData(embededData, url, mainUrl));
-    // }
-
-    // await uploadData(chunks, NAMESPACE);
     console.log("Completed");
 
     while (true) {
@@ -67,13 +52,7 @@ void (async function run() {
         ]);
         if (question === ".exit") break;
 
-        const answer = (await app.searchQuestion(question)) ?? "I don't know";
+        const answer = (await app.searchQuestion(question)) ?? "Uh oh..! This is an unusual event!";
         console.log(answer);
     }
-
-    // DEV: SAVE TO DISK
-    // writeFileSync("test.json", JSON.stringify(chunks));
-
-    // Remove next line to preserve the browser client
-    // await app.close();
 })();
