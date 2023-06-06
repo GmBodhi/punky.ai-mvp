@@ -1,31 +1,34 @@
 require("dotenv").config();
 
-const { getURLs, init, processPage, parseData, uploadData, pinecone, close } = require("./app");
+const App = require("./app1");
 const Fuse = require("fuse.js");
 const { writeFileSync } = require("fs");
+const inquirer = require("inquirer");
+
+inquirer.registerPrompt("checkbox-plus", require("inquirer-checkbox-plus-prompt"));
 
 const NAMESPACE = "SomeRandomUderId";
 
 //
 
 void (async function run() {
-    await init();
+    const app = new App();
 
-    const inquirer = (await import("inquirer")).default;
+    await app.init();
 
-    // @ts-ignore
-    inquirer.registerPrompt("checkbox-plus", require("inquirer-checkbox-plus-prompt"));
-
-    const { prompt } = inquirer;
+    const {
+        prompt,
+        ui: { BottomBar },
+    } = inquirer;
 
     const { mainUrl } = await prompt([{ type: "input", name: "mainUrl", message: "Enter the URL you want to crawl:" }]);
 
-    const urls = await getURLs(mainUrl);
+    const urls = await app.getURLs(mainUrl);
 
     // @ts-ignore
     const fuse = new Fuse(urls, {});
 
-    const chunks = [];
+    // const chunks = [];
 
     const { urls: selectedUrls } = await prompt([
         {
@@ -44,17 +47,35 @@ void (async function run() {
         },
     ]);
 
-    for (const url of selectedUrls) {
-        const embededData = await processPage(url);
-        chunks.push(parseData(embededData, url, mainUrl));
+    await app.processDocuments(...selectedUrls);
+
+    // for (const url of selectedUrls) {
+    //     const embededData = await processPage(url);
+    //     chunks.push(parseData(embededData, url, mainUrl));
+    // }
+
+    // await uploadData(chunks, NAMESPACE);
+    console.log("Completed");
+    const UI = new BottomBar();
+
+    UI.updateBottomBar(`Enter ".exit" as question to exit this frame`);
+
+    while (true) {
+        const { question } = await prompt([
+            {
+                type: "input",
+                name: "question",
+                message: "Ask a question: ",
+            },
+        ]);
+        if (question === ".exit") break;
+
+        await app.searchQuestion(question);
     }
 
-    await uploadData(chunks, NAMESPACE);
-    console.log("Completed");
-
     // DEV: SAVE TO DISK
-    writeFileSync("test.json", JSON.stringify(chunks));
+    // writeFileSync("test.json", JSON.stringify(chunks));
 
     // Remove next line to preserve the browser client
-    await close();
+    // await app.close();
 })();

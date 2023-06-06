@@ -50,8 +50,24 @@ module.exports.PineConeInstance = class PineConeInstance {
             .catch((e) => e);
 
         console.log(upsertResponse);
-        if (!upsertResponse) throw new Error("Initiate the Client before upserting a doc");
+        if (!upsertResponse) throw new Error("PINECONE: Initiate the Client before upserting a doc");
         return upsertResponse.upsertedCount === vectors.length;
+    }
+
+    //
+
+    /**
+     * @param {Vector["values"]} vector
+     * @param {string} namespace
+     */
+    async query(vector, namespace) {
+        const queryResponse = await this.index?.query({
+            queryRequest: { topK: 5, includeMetadata: true, namespace, vector },
+        });
+
+        if (!queryResponse) throw new Error("PINECONE: Initiate the Client before querying");
+
+        return queryResponse.matches;
     }
 };
 

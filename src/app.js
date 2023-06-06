@@ -2,6 +2,11 @@ const { GPT } = require("./gpt");
 const { PineConeInstance } = require("./pinecone");
 const config = require("./config");
 const { WebSpider } = require("./crawl");
+const { Prisma } = require("./prisma");
+
+//
+// INIT
+//
 
 const openai = new GPT({
     apiKey: config.OPENAI_APIKEY,
@@ -15,17 +20,24 @@ const pinecone = new PineConeInstance({
 
 const spider = new WebSpider();
 
+const prisma = new Prisma();
+
 //
 
 async function init() {
     await spider.launch();
     await pinecone.init();
+    await prisma.conn();
 }
 
 async function close() {
     await spider.close();
+    await prisma.disconn();
 }
 
+/**
+ * @param {string} URL
+ */
 async function getURLs(URL) {
     const html = await spider.crawl(URL);
     return spider.detectPaths(html, URL);
@@ -34,11 +46,18 @@ async function getURLs(URL) {
 //
 
 /**
- * @param {import("./pinecone").Vector[]} data
+ * @param {{data: string; vector: import("./pinecone").Vector}[]} data
  * @param {string} namespace
  */
 async function uploadData(data, namespace) {
-    return await pinecone.upsert(data, namespace).catch((e) => e);
+    const upsertedData = await prisma.writeDocuments(data.map((d) => ({ content: d.data, namespace })));
+
+    return await pinecone
+        .upsert(
+            data.map((d, i) => ({ ...d.vector, metadata: { id: upsertedData.at(i)?.id } })),
+            namespace
+        )
+        .catch((e) => e);
 }
 
 //
@@ -46,9 +65,9 @@ async function uploadData(data, namespace) {
 /**
  * @param {import("./gpt").EmbeddingData[]} data
  * @param {string} url
+ * @param {string} mainUrl
  */
 const parseData = (data, url, mainUrl) => ({ values: data[0].embedding, id: url, metadata: { mainUrl } });
-
 //
 
 /** @param {string} url */

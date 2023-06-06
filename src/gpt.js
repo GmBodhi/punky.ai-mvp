@@ -1,7 +1,7 @@
 const openai = require("openai");
 const { readFileSync } = require("fs");
 
-module.exports.GPT = class GPT {
+class GPT {
     //
 
     /**
@@ -41,13 +41,35 @@ module.exports.GPT = class GPT {
         return data;
     }
 
+    //
+
+    /**
+     * @param {string} prompt
+     */
+    async completionWithContext(prompt) {
+        const data = await this.engine
+            .createCompletion({
+                model: "text-davinci-003",
+                prompt,
+                n: 1,
+                max_tokens: 4000,
+            })
+            .catch(console.error);
+
+        if (!data?.data?.choices?.length) return null;
+
+        return data.data.choices.at(0);
+    }
+
+    //
+
     async listModels() {
         const models = await this.engine.listModels().catch((e) => e);
         if (!models.data?.data) throw new Error(models.data);
 
         return models.data.data;
     }
-};
+}
 
 //
 
@@ -67,3 +89,5 @@ module.exports.GPT = class GPT {
  * @property {number} index
  * @property {number[]} embedding
  */
+
+module.exports = { GPT };
