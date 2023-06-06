@@ -1,10 +1,10 @@
-const { GPT } = require("./gpt");
-const { PineConeInstance } = require("./pinecone");
-const config = require("./config");
-const { WebSpider } = require("./crawl");
-const { Prisma } = require("./prisma");
-const { DataContext } = require("./context");
-const { GPTContext } = require("./context");
+const { GPT } = require("../modules/gpt");
+const { PineConeInstance } = require("../modules/pinecone");
+const config = require("../config");
+const { WebSpider } = require("../modules/crawl");
+const { Prisma } = require("../modules/prisma");
+const { DataContext } = require("../modules/context");
+const { GPTContext } = require("../modules/context");
 
 class App {
     constructor() {
@@ -56,7 +56,7 @@ class App {
     }
 
     /**
-     * @param {import("./gpt").EmbeddingData[]} embededData
+     * @param {import("../modules/gpt").EmbeddingData[]} embededData
      * @param {string=} id
      * @param {string} data
      */
@@ -75,8 +75,8 @@ class App {
         context.setDatafromHTML(html.html());
 
         for (const data of context.data) {
-            const embededData = await this.openai.createEmbedding(data).catch((e) => null);
-            if (!embededData?.data) throw new Error("GPT: Request not satisfied");
+            const embededData = await this.openai.createEmbedding(data).catch((e) => e);
+            if (!embededData?.data) throw new Error("GPT: Request not satisfied" + embededData);
 
             docs.push(this.parseData(embededData.data, data));
         }
@@ -102,6 +102,7 @@ class App {
 
     async processDocuments(...urls) {
         this.data.clear();
+        if (!urls.length) return;
         for (const url of urls) {
             await this.processPage(url);
             await this.uploadData();

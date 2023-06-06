@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const App = require("./app1");
+const App = require("./app");
 const Fuse = require("fuse.js");
 const { writeFileSync } = require("fs");
 const inquirer = require("inquirer");
@@ -56,9 +56,6 @@ void (async function run() {
 
     // await uploadData(chunks, NAMESPACE);
     console.log("Completed");
-    const UI = new BottomBar();
-
-    UI.updateBottomBar(`Enter ".exit" as question to exit this frame`);
 
     while (true) {
         const { question } = await prompt([
@@ -70,7 +67,8 @@ void (async function run() {
         ]);
         if (question === ".exit") break;
 
-        await app.searchQuestion(question);
+        const answer = (await app.searchQuestion(question)) ?? "I don't know";
+        console.log(answer);
     }
 
     // DEV: SAVE TO DISK

@@ -3,6 +3,8 @@ const Cheerio = require("cheerio");
 const { isWithinTokenLimit, encode, decode } = require("gpt-tokenizer/model/text-davinci-003");
 const TurndownService = require("turndown");
 
+//
+
 const turndownService = new TurndownService({});
 
 turndownService
@@ -24,7 +26,7 @@ class GPTContext {
     }
 
     validateData() {
-        return isWithinTokenLimit(this.context, 4000);
+        return isWithinTokenLimit(this.context, 2000);
     }
 
     makeContext() {
@@ -42,7 +44,7 @@ class GPTContext {
 class DataContext {
     constructor() {
         this.data = [];
-        this.markdown = "";
+        this.content = "";
     }
 
     toData() {
@@ -53,12 +55,12 @@ class DataContext {
      * @param {string} dom
      */
     setDatafromHTML(dom) {
-        this.markdown = turndownService.turndown(dom);
+        this.content = turndownService.turndown(dom);
         this.splitDataintoParas();
     }
 
     splitDataintoParas() {
-        const data = [...splitChunk(this.markdown)]
+        const data = [...splitChunk(this.content)];
 
         this.data.push(...data.map((d) => Cheerio.load(d).text()));
     }
@@ -72,7 +74,7 @@ class DataContext {
  * @param {string} data
  */
 function* splitChunk(data) {
-    let n = 4000,
+    let n = 1000,
         tokens = encode(data);
 
     for (let i = 0; i < tokens.length; i += n) {
